@@ -2,30 +2,43 @@ package configs
 
 import (
 	"fmt"
-	"os"
-	"server_explorer/pkg/models"
 
 	"gopkg.in/ini.v1"
 )
 
+var ConfigFile *ini.File
+
 //Config
 type Config struct {
 	ConfigFile *ini.File
-	Server     *models.Server
+	ServerPort int
+	ServerHost string
 }
 
-func Init() {
-	cfg := &Config{}
+func NewCfg() *Config {
+	return &Config{
+		ConfigFile: ini.Empty(),
+	}
+}
+func (cfg *Config) readServerSettings(iniFile *ini.File) error {
+	server := iniFile.Section("server")
+	cfg.ServerPort = server.Key("port").MustInt(8080)
+	cfg.ServerHost = server.Key("host").MustString("localhost")
+	return nil
+}
+
+func (cfg *Config) Load() error {
 	file, err := ini.Load("default.ini")
 	if err != nil {
 		fmt.Printf("Fail to read file: %v", err)
-		os.Exit(1)
+		return err
 	}
 	cfg.ConfigFile = file
-	cfg.Server.Port = cfg.ConfigFile.Section("server").Key("port").MustInt(8080)
-	fmt.Println("this is port - ", cfg.Server.Port)
+	ConfigFile = file
+	cfg.readServerSettings(file)
+	return nil
 }
 
-func (cfg *Config) GetConfigs() *Config {
-	return cfg
+func GetConfigs() *ini.File {
+	return ConfigFile
 }
