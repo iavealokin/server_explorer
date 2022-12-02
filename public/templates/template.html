@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>IavealokinDisk</title>
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/public/templates/template.css">
+    <script type="text/javascript" src="/public/templates/high/highslide/highslide-with-html.js"></script>
+<link rel="stylesheet" type="text/css" href="/public/templates/high/highslide/highslide.css" />
+<script type="text/javascript">
+    // override Highslide settings here
+    // instead of editing the highslide.js file
+    hs.graphicsDir = '/public/templates/high/highslide/graphics/';
+</script>
+</head>
+<body>
+    <div id="header">
+        <h1>{{ .Page.Path }}</h1>
+    </div>
+    <div id="sidebar">
+   <h3>Файлы</h3>
+   <td class="left"><a href="/client/common/PhotoVideo/2018-10-19AlphaInform/IMG_20181019_232407.jpg" class="highslide" onclick="return hs.expand(this)">IMG_20181019_232407.jpg</a> </td>
+    </div>
+    <div id="content">
+        <h2>Data</h2>
+        {{ if .Page.NeedUp }}
+            <p><a href="{{.Page.UpLink}}">...</a></p>
+        {{ end }}
+        {{ range .Page.Files }}
+        <div>
+        <table >
+        {{ if .IsFolder }}
+        <td class="left"><a href="{{ .Link }}">{{ .Name }}</a> </td>
+        {{ end }}
+        {{ if not .IsFolder}}
+        {{if .IsImage}}
+        <td class="left"><a href="{{ .Link}}" class="highslide"
+            onclick="return hs.expand(this)">{{ .Name }}</a> </td>  
+        {{else}}
+        <td class="left"><a href="{{ .Link}}">{{ .Name }}</a> </td>
+        {{end}}
+        {{ end }}
+        {{if .IsFolder}}
+        <td class="right">Dir </td>
+        {{else}}
+        <td class="right">{{ .Size }} </td>
+        {{end}}
+        </table>
+        </div>
+{{end}}
+    </div>
+    <div id="footer">&copy; HomeServer</div>
+</body>
+</html>
