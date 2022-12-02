@@ -1,11 +1,11 @@
 package models
 
 type Page struct {
-	Files   []File
-	NeedUp  bool
-	Level   int
-	Path    string
-	getData func(string) Page
+	Files  []File
+	NeedUp bool
+	Level  int
+	Path   string
+	UpLink string
 }
 type File struct {
 	Id       int
@@ -13,6 +13,8 @@ type File struct {
 	Level    int
 	Name     string
 	IsFolder bool
+	IsImage  bool
+	Link     string
 }
 
 type Object struct {

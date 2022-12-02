@@ -3,8 +3,10 @@ package api
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"net/url"
+	"os"
+	"path/filepath"
 	"server_explorer/pkg/models"
 	"strings"
 
@@ -12,52 +14,59 @@ import (
 )
 
 var (
-	mainFolder string = "/homestorage"
-	path       string = mainFolder
+	mainFolder string            = "/homestorage"
+	images     map[string]string = map[string]string{".jpg": "", ".png": ""}
 )
 
+func Site(c *gin.Context) {
+	c.HTML(http.StatusOK, "main.html", nil)
+}
 func GetExplorer(c *gin.Context) {
-	if len(c.Request.URL.Query()["path"]) > 0 {
-		newPath := c.Request.URL.Query()["path"][0]
-		if newPath != "/" {
-			path += "/" + newPath
-		} else {
-			arr := strings.Split(path, "/")
-			path = ""
-			for i := 0; i < len(arr)-1; i++ {
-				path += arr[i] + "/"
-			}
-			path = strings.TrimSuffix(path, "/")
-		}
+
+	newPath, err := url.QueryUnescape(c.Request.URL.String())
+	if err != nil {
+		fmt.Println(err)
 	}
-
-	page := getData(path)
-
-	c.HTML(http.StatusOK, "template.tmpl", gin.H{
+	if newPath == "/" {
+		newPath = "/client"
+	}
+	page := getData(newPath)
+	c.HTML(http.StatusOK, "template.html", gin.H{
 		"Page": page,
 	})
 }
 
-func getData(level string) models.Page {
+func getData(newPath string) models.Page {
 	var page models.Page
-	fmt.Println(level)
-
-	if level != mainFolder {
+	replacedPath := strings.Replace(newPath, "/client", mainFolder, -1)
+	if replacedPath != mainFolder {
 		page.NeedUp = true
 
 	}
-	page.Path = level
+	page.Path = newPath
 
-	files, err := ioutil.ReadDir(level)
+	files, err := ioutil.ReadDir(replacedPath)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("err", err) //log.Fatal(err)
 	}
+	page.UpLink = upLink(page.Path)
 	newId := 1
+	var isImage bool
 	for _, file := range files {
-		//path[lvl] = append(path[lvl], models.Object{Id: newId, Prev: id + 1, Path: path[lvl-1][id].Path + "/" + file.Name()})
-		page.Files = append(page.Files, models.File{Id: newId, Name: file.Name(), Size: file.Size(), IsFolder: file.IsDir()})
-
+		if _, ok := images[strings.ToLower(filepath.Ext(newPath+string(os.PathSeparator)+file.Name()))]; ok {
+			isImage = true
+		}
+		if file.IsDir() {
+			page.Files = append(page.Files, models.File{Id: newId, Name: file.Name(), Size: file.Size(), IsFolder: file.IsDir(), Link: newPath + string(os.PathSeparator) + file.Name(), IsImage: isImage})
+		} else {
+			link := "/api/getFile?path=" + newPath + string(os.PathSeparator) + file.Name()
+			page.Files = append(page.Files, models.File{Id: newId, Name: file.Name(), Size: file.Size(), IsFolder: file.IsDir(), Link: link, IsImage: isImage})
+		}
 		newId++
 	}
 	return page
+}
+func upLink(link string) string {
+	links := strings.Split(link, "/")
+	return strings.Join(links[:len(links)-1], "/")
 }

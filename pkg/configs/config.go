@@ -6,7 +6,7 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-var ConfigFile *ini.File
+var ConfigFile *Config
 
 //Config
 type Config struct {
@@ -15,16 +15,12 @@ type Config struct {
 	ServerHost string
 }
 
-func NewCfg() *Config {
-	return &Config{
-		ConfigFile: ini.Empty(),
-	}
+func init() {
+	ConfigFile = new(Config)
+	ConfigFile.Load()
 }
-func (cfg *Config) readServerSettings(iniFile *ini.File) error {
-	server := iniFile.Section("server")
-	cfg.ServerPort = server.Key("port").MustInt(8080)
-	cfg.ServerHost = server.Key("host").MustString("localhost")
-	return nil
+func NewCfg() *Config {
+	return ConfigFile
 }
 
 func (cfg *Config) Load() error {
@@ -34,11 +30,12 @@ func (cfg *Config) Load() error {
 		return err
 	}
 	cfg.ConfigFile = file
-	ConfigFile = file
-	cfg.readServerSettings(file)
+	server := file.Section("server")
+	cfg.ServerPort = server.Key("port").MustInt(8080)
+	cfg.ServerHost = server.Key("host").MustString("192.168.1.108")
 	return nil
 }
 
-func GetConfigs() *ini.File {
+func GetConfigs() *Config {
 	return ConfigFile
 }
